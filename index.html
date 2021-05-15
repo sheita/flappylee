@@ -22,9 +22,12 @@
 
     <script type="text/javascript">
 
-      if(window.innerHeight > window.innerWidth){
-        alert("Please use Landscape!");
-      } else {
+      var start = false;
+      for (var i=0; i<100000; i++) {
+         if (window.innerHeight < window.innerWidth){ start = true; )
+      }
+
+      if (start) {
 
       // Initialisation du canvas
       var canvas = document.querySelector("canvas");
