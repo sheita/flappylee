@@ -397,7 +397,7 @@
 
       // Appui sur la barre d'espace ou toucher sur l'écran pour déclencher l'évènement
       canvas.addEventListener("touchstart", function(event) { tap(event.touches[0].clientX, yTouch = event.touches[0].clientY); }, false);
-      canvas.addEventListener("click", function(event) { tap(event.layerX, yTouch = event.layerY) }, false);
+      //canvas.addEventListener("click", function(event) { tap(event.layerX, yTouch = event.layerY) }, false);
       document.addEventListener("keydown", function() { tap() });
 
       // Fonction exécutée lorsque le joueur appuie sur la barre d'espace ou appuie sur l'écran
