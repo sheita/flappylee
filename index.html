@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon-precomposed" href="images/flapicon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=0.73, maximum-scale=0.72">
+    <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=0.75, maximum-scale=0.72">
     <style>
       html, body {padding: 0; margin: 0; height: 100%}
       html {background: #1a1a1a; overflow-x: hidden}
@@ -397,7 +397,7 @@
 
       // Appui sur la barre d'espace ou toucher sur l'écran pour déclencher l'évènement
       //canvas.addEventListener("touchstart", function(event) { tap(event.touches[0].clientX, yTouch = event.touches[0].clientY); }, false);
-      canvas.addEventListener("click", function(event) { tap(event.layerX, yTouch = event.layerY) }, false);
+      canvas.addEventListener("mousedown", function(event) { tap(event.layerX, yTouch = event.layerY) }, false);
       document.addEventListener("keydown", function() { tap() });
 
       // Fonction exécutée lorsque le joueur appuie sur la barre d'espace ou appuie sur l'écran
