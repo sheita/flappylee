@@ -1,0 +1,445 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Flappy Lee 2</title>
+    <link rel="icon" href="flapicon.ico" />
+    <link rel="apple-touch-icon-precomposed" href="images/flapicon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="viewport-fit=cover, user-scalable=no, width=device-width, initial-scale=0.72, maximum-scale=0.72">
+    <style>
+      html, body {padding: 0; margin: 0; height: 100%}
+      html {background: #1a1a1a; overflow-x: hidden}
+      body {margin: 0; display: flex; justify-content: center; align-items: center; touch-action: manipulation;
+        overflow-x: hidden; position: relative}
+      canvas {background: white}
+    </style>
+  </head>
+
+  <body>
+    <canvas>Flappy Lee 2 ne fonctionne que avec les navigateurs HTML5</canvas>
+
+    <script type="text/javascript">
+
+      // Initialisation du canvas
+      var canvas = document.querySelector("canvas");
+      canvas.width = "800";
+      canvas.height = "500";
+      var c = canvas.getContext("2d");
+      var largeur = canvas.width; // Largeur du canvas
+      var hauteur = canvas.height; // Hauteur du canvas
+
+      listeThemes = ["park-green", "city-lightblue" , "clouds-white", "moon-orange", "galaxy-darkblue"]
+
+      // Définition du thème initial du jeu
+      var themes = {
+        indice: 0,
+        nom: listeThemes[0],
+        debloques: [0],
+        changerTheme: function (i) {
+          if (this.debloques.includes(i)) {
+            this.indice = i;
+          } else if (!(this.debloques.includes(i)) && jeu.pieces >= 100) {
+            jeu.pieces -= 100;
+            this.debloques.push(i);
+            if (i==1) { cityIcone.src = "images/city-icone.png"; }
+            if (i==2) { cloudsIcone.src = "images/clouds-icone.png"; }
+            if (i==3) { moonIcone.src = "images/moon-icone.png"; }
+            if (i==4) { galaxyIcone.src = "images/galaxy-icone.png"; }
+          }
+        },
+        nouveauTheme: function () {
+          this.nom = listeThemes[this.indice];
+          imageDeFond.src = "images/loop-"+this.nom.split("-")[0]+".png";
+          tuyauBas.src = "images/tuyau-"+this.nom.split("-")[1]+"-bas.png";
+          tuyauHaut.src = "images/tuyau-"+this.nom.split("-")[1]+"-haut.png";
+        }
+      }
+
+      // Chargement des images
+      var imageDeFond = new Image();
+      var tuyauBas = new Image();
+      var tuyauHaut = new Image();
+      var flapImg = new Image();
+      flapImg.src = "images/flapflap.png";
+      var intro = new Image();
+      intro.src = "images/intro.png";
+      var perdu = new Image();
+      perdu.src = "images/perdu.png"
+      var pieceImg = new Image();
+      pieceImg.src = "images/piece.png"
+      var flapIcon = new Image();
+      flapIcon.src = "images/flapicon.png";
+      themes.nouveauTheme();
+
+      var parkIcone = new Image();
+      parkIcone.src = "images/park-icone.png";
+      var cityIcone = new Image();
+      cityIcone.src = "images/cadenas-icone.png";
+      var cloudsIcone = new Image();
+      cloudsIcone.src = "images/cadenas-icone.png";
+      var moonIcone = new Image();
+      moonIcone.src = "images/cadenas-icone.png";
+      var galaxyIcone = new Image();
+      galaxyIcone.src = "images/cadenas-icone.png";
+
+      var jeu = {
+        ecranActuel: "accueil",
+        tempsTotal: 0,
+        tempsApresTap: 0,
+        tempsDeTransition: 0,
+        pourcentageTransition: 0,
+        tempsDebutAnimationMort: 0,
+        tempsQuandPerdu: 0,
+        vitesse: 4,
+        score: 0,
+        meilleurScore: 0,
+        nbDeParties: 0,
+        pieces: 0,
+        ximageDeFond: 0,
+        initialiser: function() { // Initialisation ou réinitialisation de l'écran de jeu
+          tuyaux.initialiser();
+          pieces.initialiser();
+          this.tempsTotal = 0;
+          this.tempsApresTap = 0;
+          flap.x = largeur/5;
+          flap.y = hauteur/2;
+          this.vitesse = 4;
+          this.score = 0;
+          this.pourcentageTransition = 0;
+        },
+        nouvelEcran: function(ecran) {
+          this.ecranActuel = ecran;
+        },
+        afficherScore: function() {
+          c.font ="bold 50px sans-serif";
+          c.fillStyle = "white";
+          c.textAlign = "right";
+          c.globalAlpha = this.pourcentageTransition;
+          c.fillText(jeu.score, 0.975*largeur, 55);
+          c.globalAlpha = 1;
+        },
+        afficherNbDePieces: function() {
+          c.globalAlpha = this.pourcentageTransition;
+          c.drawImage(pieceImg, 0.02*largeur, 20, 32, 32);
+          c.font = "bold 30px sans-serif";
+          c.textAlign = "left";
+          c.fillStyle = "sienna";
+          c.fillText(jeu.pieces, 0.07*largeur, 47);
+          c.globalAlpha = 1;
+        },
+        miseAjourCookie: function() {
+          //document.cookie = jeu.pieces.toString()+"; expires=Fri, 31 Dec 9999 23:59:59 GMT";
+        },
+        lireCookie: function() {
+          //var cookie = decodeURIComponent(document.cookie).split('; ');
+          //if (!isNaN(parseInt(cookie[0]))) {
+          //  jeu.pieces = parseInt(cookie[0]);
+          //}
+          params = new URLSearchParams(window.location.search)
+          if (!params.get("pieces")=="") {
+            jeu.pieces += parseInt(params.get("pieces"));
+          }
+        }
+      }
+
+      var flap = {
+        x: 0,
+        y: 0,
+        taille: 34,
+        yDernierTap: 0,
+        afficher: function() {
+          //if(jeu.ecranActuel = "jeu") {
+            //c.save();
+            //c.translate(flap.x,flap.y);
+            //c.rotate(Math.sin((jeu.tempsApresTap/100)*Math.PI)-Math.PI/4);
+            //c.translate(-flap.x, -flap.y);
+            //c.drawImage(flapImg, this.x-this.taille/2, this.y-this.taille/2, this.taille, this.taille);
+            //c.restore();
+          //} else {
+            c.drawImage(flapImg, this.x-this.taille/2, this.y-this.taille/2, this.taille, this.taille);
+          //}
+        }
+      }
+
+      listePieces = []
+
+      function Piece(xDebut, xFin) {
+        this.x = Math.floor(Math.random()*((xFin-20)-(xDebut+20))+(xDebut+20));
+        this.y = Math.floor(Math.random()*(hauteur-100)+50);
+        this.taille = 24;
+        this.visible = true;
+      }
+
+      var pieces = {
+        initialiser: function() {
+          listePieces = [];
+          listePieces.push(new Piece(largeur/3, largeur));
+        },
+        afficher: function() {
+          listePieces.forEach(function(piece) {
+            if (piece.visible) {
+              c.drawImage(pieceImg,piece.x-piece.taille/2,piece.y-piece.taille/2 + 6*Math.cos(jeu.tempsTotal/20),24,24);
+            }
+          })
+        },
+        deplacementPiece: function() {
+          listePieces.forEach(function(piece) {
+            piece.x -= jeu.vitesse;
+          });
+        },
+        rajouterPieces: function(xDebut, xFin) {
+          if (listePieces[listePieces.length-1].x<-listePieces[listePieces.length-1].taille && Boolean(Math.round(Math.random()))) {
+            listePieces.push(new Piece(listeTuyaux[listeTuyaux.length-2].x+60, listeTuyaux[listeTuyaux.length-1].x))
+          }
+        }
+      }
+
+      listeTuyaux = []
+
+      function Tuyau(x) {
+        this.x = x;
+        this.largeurTrou = 200;
+        this.hauteurTrou = Math.random() * ((hauteur - this.largeurTrou/2 - 60) - (this.largeurTrou/2 + 30)) + (this.largeurTrou/2 + 30)
+        this.actif = true;
+      }
+
+      var tuyaux = {
+        initialiser: function() {
+          listeTuyaux = []; // La liste des tuyaux est remise à zéro
+          for (var i=0; i<3; i++) { // On crée trois tuyaux au lancement du jeu
+            listeTuyaux.push(new Tuyau(500 + 400 * (listeTuyaux.length+1)));
+          }
+        },
+        afficher: function() {
+          listeTuyaux.forEach(function(tuyau) {
+            if (tuyau.actif) {
+              c.drawImage(tuyauHaut,tuyau.x,tuyau.hauteurTrou-listeTuyaux[jeu.score].largeurTrou/2,60,-525);
+              c.drawImage(tuyauBas,tuyau.x,tuyau.hauteurTrou+listeTuyaux[jeu.score].largeurTrou/2,60,525);
+            }
+          });
+        },
+        deplacementTuyau: function() {
+          listeTuyaux.forEach(function(tuyau) {
+            tuyau.x -= jeu.vitesse;
+          });
+        },
+        rajouterTuyaux: function() {
+          if(jeu.score>0) {
+            if(listeTuyaux[jeu.score-1].x < -60 && listeTuyaux[jeu.score-1].actif) {
+              listeTuyaux[jeu.score-1].actif=false;
+              listeTuyaux.push(new Tuyau(1140));
+              pieces.rajouterPieces();
+            }
+          }
+        },
+      }
+
+      var verifierSi = {
+        // Vérifier si les coordonnées de flap sont dans une zone autour d'une pièce
+        flapAttrapePiece: function() {
+          zoneAutour = 12;
+          listePieces.forEach(function(piece) {
+            if (piece.visible) {
+              if (flap.x >= piece.x-piece.taille/2-zoneAutour && flap.x <= piece.x+piece.taille/2+zoneAutour && flap.y >= piece.y-piece.taille/2-zoneAutour && flap.y <= piece.y+piece.taille/2+zoneAutour) {
+                piece.visible = false;
+                jeu.pieces += 1;
+              }
+            }
+          });
+
+        },
+        flapMort: function() {
+          // Vérifier si flap heurte un tuyau
+          listeTuyaux.forEach(function(tuyau) {
+            if(flap.x > tuyau.x-flap.taille/2 && flap.x < tuyau.x+46+flap.taille/2) {
+              if((flap.y-flap.taille/2 < tuyau.hauteurTrou - tuyau.largeurTrou/2)  || (flap.y+flap.taille/2 > tuyau.hauteurTrou + tuyau.largeurTrou/2)) {
+                jeu.nouvelEcran("animationMort");
+                jeu.tempsDebutAnimationMort = jeu.tempsTotal
+              }
+            };
+          })
+          // Vérifier si flap sort de l'écran (en bas seulement)
+          if (flap.y>hauteur+flap.taille) {
+            jeu.nouvelEcran("animationMort");
+            jeu.tempsDebutAnimationMort = jeu.tempsTotal
+          }
+        }
+      }
+
+      // Fonction exécutée chaque frame (60 FPS)
+      function animer() {
+        requestAnimationFrame(animer);
+        c.clearRect(0,0,largeur,hauteur);
+
+        // Affichage du background : deux images qui défilent pour donner une impression d'infini
+        c.drawImage(imageDeFond, jeu.ximageDeFond, 0, imageDeFond.width, hauteur);
+        c.drawImage(imageDeFond, jeu.ximageDeFond+imageDeFond.width-1, 0, imageDeFond.width, hauteur);
+
+        // tempsApresTap d'exécution total du jeu
+        jeu.tempsApresTap += 1;
+
+        // Différents écrans du jeu
+        switch(jeu.ecranActuel) {
+        case "accueil": // Acceuil du jeu
+          c.drawImage(intro, 0, 0, largeur, hauteur);
+          break;
+
+        case "pretAJouer": // Prêt à démarrer
+          flap.y = flap.y + Math.cos(jeu.tempsApresTap/30);
+          flap.afficher();
+          break;
+
+        case "jeu": // Jeu
+          // Déplacement de l'image de fond infinie
+          if (jeu.pourcentageTransition < 1) {
+            jeu.ximageDeFond-=jeu.pourcentageTransition;
+            jeu.pourcentageTransition += 0.1;
+          } else {
+            jeu.ximageDeFond-=1;
+            if (jeu.ximageDeFond<=-imageDeFond.width) { jeu.ximageDeFond=0; }
+          }
+
+          // Gravité
+          flap.y = 0.25*jeu.tempsApresTap**2-10*jeu.tempsApresTap+flap.yDernierTap;
+
+          // Affichage de l'oiseau, des tuyaux et des pièces
+          pieces.afficher();
+          flap.afficher();
+          tuyaux.afficher();
+
+          // Mise à jour du score quand un tuyau est dépassé
+          if(flap.x > listeTuyaux[jeu.score].x) { jeu.score+=1; }
+
+          jeu.afficherScore();
+          jeu.afficherNbDePieces();
+
+          // Déplacement des pièces et tuyaux, plusieurs vérifications
+          pieces.deplacementPiece();
+          tuyaux.deplacementTuyau();
+          tuyaux.rajouterTuyaux();
+          verifierSi.flapMort();
+          verifierSi.flapAttrapePiece();
+
+          // Augmentation progressive de la vitesse du jeu
+          jeu.vitesse += 0.0005;
+
+          // Mise à jour du temps total
+          jeu.tempsTotal += 1;
+          break;
+
+        case "animationMort": // Animation de mort
+          jeu.tempsTotal += 1;
+          flap.afficher();
+          pieces.afficher();
+          tuyaux.afficher();
+
+          jeu.afficherScore();
+          jeu.afficherNbDePieces();
+
+          // Animation de mort avant d'afficher "Perdu"
+          if (jeu.tempsTotal>jeu.tempsDebutAnimationMort+30) { flap.y+=10; }
+          if (flap.y>hauteur) {
+            jeu.nouvelEcran("perdu");
+            jeu.tempsQuandPerdu = jeu.tempsTotal;
+            jeu.nbDeParties += 1;
+            jeu.miseAjourCookie();
+            if (jeu.meilleurScore < jeu.score) { jeu.meilleurScore = jeu.score; }
+          }
+          break;
+
+        case "perdu": // Perdu & Score
+          jeu.tempsTotal += 1;
+          pieces.afficher();
+          tuyaux.afficher();
+
+          jeu.afficherScore();
+          jeu.afficherNbDePieces();
+
+          // Affichage de "Perdu" avec le score en dessous
+          c.drawImage(perdu, 0, 0, largeur, hauteur);
+          c.textAlign = "right";
+          c.font = "bold 18px sans-serif";
+          c.fillStyle = "lightgrey";
+          if (jeu.nbDeParties > 1) { c.fillText("MEILLEUR : "+jeu.meilleurScore,largeur*0.98,hauteur*0.16) };
+
+          // Affichage de la bannière translucide
+          c.globalAlpha = 0.3;
+          c.fillStyle = "black";
+          c.fillRect(0,hauteur*0.77,largeur,hauteur);
+          c.globalAlpha = 1;
+
+          // Affichage des icones des thèmes
+          c.drawImage(parkIcone, 1*largeur/6-60/2 , hauteur*0.8, 60 , 60);
+          c.drawImage(cityIcone, 2*largeur/6-60/2 , hauteur*0.8, 60 , 60);
+          c.drawImage(cloudsIcone, 3*largeur/6-60/2 , hauteur*0.8, 60 , 60);
+          c.drawImage(moonIcone, 4*largeur/6-60/2 , hauteur*0.8, 60 , 60);
+          c.drawImage(galaxyIcone, 5*largeur/6-60/2 , hauteur*0.8, 60 , 60);
+
+          // Affichage des noms des thèmes
+          c.textAlign = "center";
+          c.font = "bold 18px sans-serif";
+          c.fillStyle = "lightgrey";
+
+          c.fillText("PARK", 1*largeur/6+2 , hauteur*0.97);
+          for (var i = 0; i<5; i++) {
+            if (themes.debloques.includes(i)) {
+              var nomDuTheme = listeThemes[i].split("-")[0].toUpperCase();
+              c.fillText(nomDuTheme, (i+1)*largeur/6+2 , hauteur*0.97);
+            } else {
+              c.fillText("   100", (i+1)*largeur/6+2 , hauteur*0.97);
+              c.drawImage(pieceImg, (i+1)*largeur/6-60/2+4 , hauteur*0.942, 15, 15);
+            }
+          }
+        }
+      }
+
+      // Appui sur la barre d'espace ou toucher sur l'écran pour déclencher l'évènement
+      canvas.addEventListener("touchstart", function(event) { tap(event.touches[0].clientX, yTouch = event.touches[0].clientY); }, false);
+      canvas.addEventListener("click", function(event) { tap(event.layerX, yTouch = event.layerY) }, false);
+      document.addEventListener("keydown", function() { tap() });
+
+      // Fonction exécutée lorsque le joueur appuie sur la barre d'espace ou appuie sur l'écran
+      function tap(xTap,yTap) {
+        switch(jeu.ecranActuel) {
+        case "accueil": // Accueil du jeu
+          jeu.nouvelEcran("pretAJouer");
+          break;
+
+        case "pretAJouer": // Prêt à démarrer
+          jeu.nouvelEcran("jeu");
+          flap.yDernierTap = flap.y;
+          jeu.tempsTotal = 0;
+          jeu.tempsApresTap = 0;
+          break;
+
+        case "jeu": // Jeu
+          flap.yDernierTap = flap.y;
+          jeu.tempsApresTap = 0;
+          break;
+
+        case "perdu": // Perdu & Score
+          if (yTap>hauteur*0.75) {
+            if (xTap<1*largeur/6+40 && xTap>1*largeur/6-40) { themes.changerTheme(0); }
+            if (xTap<2*largeur/6+40 && xTap>2*largeur/6-40) { themes.changerTheme(1); }
+            if (xTap<3*largeur/6+40 && xTap>3*largeur/6-40) { themes.changerTheme(2); }
+            if (xTap<4*largeur/6+40 && xTap>4*largeur/6-40) { themes.changerTheme(3); }
+            if (xTap<5*largeur/6+40 && xTap>5*largeur/6-40) { themes.changerTheme(4); }
+            themes.nouveauTheme();
+          } else {
+            if(jeu.tempsTotal - jeu.tempsQuandPerdu > 30) {
+              jeu.nouvelEcran("pretAJouer");
+              jeu.initialiser();
+            }
+          }
+          break;
+        }
+      }
+
+      jeu.initialiser();
+      jeu.lireCookie();
+      animer();
+
+    </script>
+  </body>
+</html>
